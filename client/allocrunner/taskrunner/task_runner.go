@@ -1312,6 +1312,7 @@ func (tr *TaskRunner) Restore() error {
 func (tr *TaskRunner) restoreHandle(taskHandle *drivers.TaskHandle, net *drivers.DriverNetwork) (success bool) {
 	// Ensure handle is well-formed
 	if taskHandle.Config == nil {
+		tr.logger.Warn("restoreHandle , taskHandle.Config is nil")
 		return true
 	}
 
@@ -1325,19 +1326,22 @@ func (tr *TaskRunner) restoreHandle(taskHandle *drivers.TaskHandle, net *drivers
 			"error", err, "task_id", taskHandle.Config.ID)
 
 		// Try to cleanup any existing task state in the plugin before restarting
-		if err := tr.driver.DestroyTask(taskHandle.Config.ID, true); err != nil {
-			// Ignore ErrTaskNotFound errors as ideally
-			// this task has already been stopped and
-			// therefore doesn't exist.
-			if err != drivers.ErrTaskNotFound {
-				tr.logger.Warn("error destroying unrecoverable task",
-					"error", err, "task_id", taskHandle.Config.ID)
-			}
+		/*
+			if err := tr.driver.DestroyTask(taskHandle.Config.ID, true); err != nil {
+				// Ignore ErrTaskNotFound errors as ideally
+				// this task has already been stopped and
+				// therefore doesn't exist.
+				if err != drivers.ErrTaskNotFound {
+					tr.logger.Warn("error destroying unrecoverable task",
+						"error", err, "task_id", taskHandle.Config.ID)
+				}
 
-		}
+			}
+		*/
 
 		return false
 	}
+	tr.logger.Warn("tr.driver.RecoverTask(taskHandle) , worked: %v\n", taskHandle)
 
 	// Update driver handle on task runner
 	tr.setDriverHandle(NewDriverHandle(tr.driver, taskHandle.Config.ID, tr.Task(), tr.clientConfig.MaxKillTimeout, net))
